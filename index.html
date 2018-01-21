@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <title>Maker Hub Equipment and Expertise Reservation System</title>
+    <base target="_top">
+  <?!= include("STYLESHEET"); ?>
+  
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullPage.js/2.9.5/jquery.fullpage.min.css" />    
+  
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.1/moment-with-locales.min.js"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.6.2/fullcalendar.min.js"
+    crossorigin="anonymous"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.6.2/fullcalendar.min.css" rel="stylesheet">
+  
+  
+  <!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullPage.js/2.9.5/jquery.fullpage.min.js"></script>
+    <script src="https://cdn.rawgit.com/thanashyam/2309671/raw/5168575d69cd84588c52aa183dbfb3d932b9d4f9/jquery.md5.js"></script>
+
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="username">
+    
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-4">
+        
+<div id="accordion" role="tablist">
+
+  <div class="card">
+    <div class="card-header" role="tab" id="headingOne">
+      <h5 class="mb-0">
+        <a class="collapsed" data-toggle="collapse" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+        Reserve equipment
+        </a>
+      </h5>
+    </div>
+    <div id="collapseOne" class="collapse" role="tabpanel" aria-labelledby="headingOne">
+      <div class="card-body">
+      <ul class="equipment_list">
+      
+      </ul>
+      </div>
+    </div>
+    <div class="card-header" role="tab" id="headingReservationUI_e">
+      <h5 class="mb-0">
+        <a class="collapsed" data-toggle="collapse" href="#collapseReservationUI_e" aria-expanded="false" aria-controls="collapseReservationUI_e">
+<!--        Reservation UI-->
+        </a>
+      </h5>
+    </div>
+    <div id="collapseReservationUI_e" class="collapse" role="tabpanel" aria-labelledby="headingReservationUI_s">
+      <div class="card-body">
+      UI Here
+      </div>
+    </div>
+  </div>   
+  <div class="card">
+    <div class="card-header" role="tab" id="headingTwo">
+      <h5 class="mb-0">
+        <a class="collapsed" data-toggle="collapse" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+        Reserve an expert
+        </a>
+      </h5>
+    </div>
+    <div id="collapseTwo" class="collapse" role="tabpanel" aria-labelledby="headingTwo">
+      <div class="card-body">
+      <ul class="merit_badge_list">
+      
+      </ul>
+      </div>
+    </div>
+  </div>
+ 
+  
+</div>
+        
+        </div>
+          <div class="col-md-8">
+            <div id="calendar">
+    
+            </div>
+          </div>
+      </div>
+      <div class="row">
+        <div>
+          <pre class="event">
+    
+          </pre>
+        </div>
+      </div>
+    </div>
+    <script>
+
+// link: https://script.google.com/a/georgetown.edu/macros/s/AKfycbz9xcx_m-6LEez8cUlR59q4E-f4pnSMz1JwqFHZS_Rr/dev
+
+
+
+var timezone = "local";
+var defaultView= "agendaDay";
+var curView = defaultView;
+
+// refactor out
+var staffMeritBadges = {};
+var meritBadgeList = {};
+var scheduleWithDeets = {};
+// end refactor out
+
+
+var calendarStartDate = false;
+var calendarEndDate = false;
+
+
+var selectedBadgeName = false;
+var selectedBadgeScriptName = false;
+var staffScheduleEventsFiltered = false;
+
+
+var staffScheduleCalendarName = "Maker Hub Staff and Volunteer Schedule";
+var staffScheduleEvents = false;
+var equipmentReservationCalendarName = "";
+var equipmentReservationEvents = false;
+var staffConsultationCalendarName = "Georgetown Maker Hub Staff Consultation Calendar";
+var staffConsultationEvents = false;
+var staffAvailabilityEvents = false;
+
+var meritBadgeIconList = false;
+var staffChecklist = false;
+var equipmentList = false;
+
+var user = {
+  meritBadges : [],
+  isStaff : false     
+}
+
+
+function gotNetId(username){
+  $(".content").text(username);
+}
+
+function eventCreated(event){
+console.log("event created");
+console.log(event);
+  $(".event").text(JSON.stringify(event, null, '  '));
+}
+
+
+// Get Data
+
+// events
+function getStaffScheduleEvents(startDate, endDate, callback){
+console.log("start " + startDate.toString());
+console.log("end " + endDate.toString());
+  google.script.run
+  .withFailureHandler(function(error){console.log(error);})
+  .withSuccessHandler(function(data){
+      console.log("got sse data");
+    console.log(data);
+
+    staffScheduleEvents = data;
+    if(callback){callback();}
+  }).getStaffScheduleEvents(startDate.toString(), endDate.toString()); 
+}
+
+function getStaffConsultationEvents(startDate, endDate, callback){
+console.log("start " + startDate.toString());
+console.log("end " + endDate.toString());
+  google.script.run
+  .withFailureHandler(function(error){console.log(error);})
+  .withSuccessHandler(function(data){
+    console.log("got sce data");
+    console.log(data);
+    staffConsultationEvents = data;
+    if(callback){callback();}
+  }).getStaffConsultationEvents(startDate.toString(), endDate.toString()); 
+}
+
+
+function getEquipmentReservationEvents(startDate, endDate, callback){
+console.log("start " + startDate.toString());
+console.log("end " + endDate.toString());
+  google.script.run
+  .withFailureHandler(function(error){console.log(error);})
+  .withSuccessHandler(function(data){
+    equipmentReservationEvents = data;
+    if(callback){callback();}
+  }).getEquipmentReservationEvents(startDate.toString(), endDate.toString()); 
+}
+
+
+// get other data
+function getMeritBadgeIconList(callback){
+  google.script.run
+  .withFailureHandler(function(error){console.log(error);})
+  .withSuccessHandler(function(data){
+    meritBadgeIconList = data;
+    if(callback){callback();}
+  }).getMeritBadgeIconList(); 
+}
+
+function getStaffChecklist(callback){
+  google.script.run
+  .withFailureHandler(function(error){console.log(error);})
+  .withSuccessHandler(function(data){
+    staffChecklist = data;
+    if(callback){callback();}
+  }).getStaffChecklist(); 
+}
+
+function getEquipmentList(callback){
+  google.script.run
+  .withFailureHandler(function(error){console.log(error);})
+  .withSuccessHandler(function(data){
+    equipmentList = data;
+    if(callback){callback();}
+  }).getEquipmentList(); 
+}
+
+
+
+// data munging
+function reconcileStaffScheduleAndConsultations(callback){
+// this involves some processing, splitting up staff availability events based on current consultation events.
+  staffAvailabilityEvents = {};
+  
+  // look through staff consultation events,
+  // find all staff schedule events with same person
+  $.each(staffConsultationEvents, function(key, event){
+    var consultEventStart = new moment(event.startTime);
+    var consultEventEnd = new moment(event.endTime);
+    
+    var staffEmail = event.guestList[0].email;
+/*
+    staffEmail = "ahd48@georgetown.edu";
+    staffEmail = "da606@georgetown.edu";
+    staffEmail = "nbm28@georgetown.edu";
+  */  
+    var staffEvents = staffScheduleEvents.filter(function(a){
+      return a.guestList[0].email == staffEmail;
+    });
+    $.each(staffEvents, function(index, schedEvent){
+      var schedEventStart = new moment(schedEvent.startTime);
+      var schedEventEnd = new moment(schedEvent.endTime);
+      
+      // compare dates
+      var overlap = false;
+      if(consultEventStart.unix() > schedEventStart.unix() && consultEventEnd.unix() < schedEventEnd.unix()){
+        overlap = "split";
+      }
+      if(consultEventStart.unix() <= schedEventStart.unix() && consultEventEnd.unix() < schedEventEnd.unix() && consultEventEnd.unix() > schedEventStart.unix() ){
+        overlap = "beginning";
+      }
+      if(consultEventStart.unix() > schedEventStart.unix() && consultEventStart.unix() < schedEventEnd.unix() && consultEventEnd.unix() >= schedEventEnd.unix() ){
+        overlap = "end";
+      }
+      if(consultEventStart.unix() <= schedEventStart.unix() && consultEventEnd.unix() >= schedEventEnd.unix()){
+        overlap = "total";
+      }
+      if(overlap == "beginning"){
+         // change start time of sched event to be same as end time of consult event
+         schedEvent.startTime = event.endTime;
+      }
+      if(overlap == "end"){
+         // change endTime of sched event to be same as start time of consult event
+         schedEvent.endTime = event.startTime;
+      }
+      if(overlap == "split"){
+        // we need to copy the sched event, then edit the dates
+        var newEvent = JSON.parse(JSON.stringify(schedEvent));
+        newEvent.startTime = event.endTime;
+        schedEvent.endTime = event.startTime;
+        staffScheduleEvents.push(newEvent);
+      }
+      if(overlap == "total"){
+        // we delete the entire event
+        schedEvent.deleteme = true;
+      }
+
+    });
+    
+  });
+  staffScheduleEvents = staffScheduleEvents.filter(function(a){
+    return(!a.deleteme);
+  });
+  if (callback){
+    callback();
+  }
+}
+
+
+
+// filter staff schedule events based on requested badges and staff expertise
+function filterStaffScheduleEventsbyBadges(callback){
+  console.log("filtering");
+  if(!selectedBadgeName){
+    staffScheduleEventsFiltered = true;  
+    if(callback){
+      callback();    
+    }
+    return;
+  }
+  var badgeNames = Object.keys(meritBadgeIconList);
+  var newEvents = staffScheduleEvents.filter(function(event){
+    try{
+      var staffId = event.guestList[0].email.split("@")[0];
+      console.log(staffId);
+      // get merit badges this person has.
+      var staffData = staffChecklist.checklistData.data.filter(function(a){
+        return a.NetId == staffId;      
+      })[0];
+      var showhide = "hide";
+      $.each(meritBadgeIconList, function(badgeName){
+        if(staffData[badgeName]){
+          if(selectedBadgeName == badgeName){
+            showhide = "show";
+          }
+        }
+      });
+      if(showhide == "hide"){
+        return false;
+      }else{
+        return true;
+      }
+    }catch(e){
+      console.log("error in eventRendered loop: " + e);
+    }
+  });
+  staffScheduleEvents = newEvents;
+  staffScheduleEventsFiltered = true;
+  if(callback){
+    callback();    
+  }
+  
+}
+
+
+// render Data
+
+
+function renderEvents(){
+  showEvents(staffScheduleEvents);
+  showEvents(equipmentReservationEvents);
+  showEvents(staffConsultationEvents);
+  showEvents(staffAvailabilityEvents);
+}
+
+function showMeritBadgeList(){
+  $.each(meritBadgeIconList, function(key, badge){
+    (function(_key, _badge){
+      var badgeElem = $("<li data-badgename='"+key+"' class='clickable'>"+key+"</li>").appendTo(".merit_badge_list");
+      $(badgeElem).click(function(event){
+        meritBadgeClicked(_key, _badge, event);
+      });
+    })(key, badge);
+  });
+}
+
+
+function showEquipmentList(){
+  $.each(equipmentList, function(cat_key, cat){
+    var cat_elem = $("<li data-category='"+cat_key+"'><span class='cat_name'>"+cat_key+"</span></li>").appendTo(".equipment_list");
+    var item_list = $("<ul></ul>").appendTo(cat_elem);
+    $.each(cat.items, function(item_name, item_data){
+      (function(_item_name, _item_list){
+        var item_elem = $("<li class='clickable' data-item='"+_item_name+"'>"+_item_name+"</li>").appendTo(_item_list);
+        $(item_elem).click(function(event){equipmentClicked(event);});
+      })(item_name, item_list);
+    });    
+  });
+}
+
+
+function showEvents(events){
+  console.log("showEvents");
+  console.log(events);
+  
+  $.each(events, function(key, event){
+     console.log(event);
+     var revent = {
+       id : event.id,
+       title: event.title,
+       start : event.startTime,
+       calendarName : event.calendarName,
+       end : event.endTime,
+       guestList : event.guestList,
+       staffId: event.staffId
+     };
+     console.log("showing event");
+     console.log(revent);
+     $("#calendar").fullCalendar('renderEvent', revent);
+  });
+  
+  console.log($("#calendar"));
+}
+
+
+// UI interactions
+var currentMeritBadgeClicked = false;
+function meritBadgeClicked(name, badge, event){
+  console.log("meritBadgeClicked");
+  if(name == currentMeritBadgeClicked){
+    return;
+  }
+  currentMeritBadgeClicked = name;
+  var badgeScriptName = "badge_"+name.replace(/[^a-zA-Z]/g,"");
+  selectedBadgeName = name;
+  selectedBadgeScriptName = badgeScriptName;
+  console.log(name);
+  console.log(badgeScriptName);
+  console.log(badge);
+  console.log(event);
+  calendarNewRender(); 
+  
+}
+
+
+
+
+function equipmentClicked(event){
+  console.log("equipmentClicked");
+  console.log(event);
+  var item_name = $(event.target).data("item");
+  var category = $(event.target).parent().parent().data("category");
+  console.log(category + " : " + item_name);
+  
+  $("#collapseOne").collapse("hide");
+  $("#collapseReservationUI_e").collapse("show");  
+  
+  /*
+  Here let's have the UI that handles making a reservation
+  
+  
+  
+  
+  */
+}
+
+function calendarNewRender(view, element){
+    //console.log(view.start.format('MMMM Do YYYY, h:mm:ss a'));
+    //console.log(view.end.format('MMMM Do YYYY, h:mm:ss a'));
+    // then get all the events in the time frame.
+    //console.log(element);
+    
+    console.log("calendarNewRender");
+    $('#calendar').fullCalendar('removeEvents');
+    
+    staffScheduleEvents = false;
+    equipmentReservationEvents = false;
+    staffConsultationEvents = false;
+    staffAvailabilityEvents = false;   
+    staffScheduleEventsFiltered = false;
+    
+    calendarStartDate = $('#calendar').fullCalendar('getDate');   
+    calendarEndDate = $('#calendar').fullCalendar('getDate');   
+    
+    console.log("curDate is " + calendarStartDate.format());
+    calendarEndDate.endOf("day");
+    calendarStartDate.startOf("day");
+    if(curView == "agendaDay"){
+       calendarEndDate.endOf("day");
+       calendarStartDate.startOf("day");
+    }
+    
+    console.log("starrt");
+    console.log(calendarStartDate.toString());
+    console.log(calendarEndDate.toString());
+    
+    getStaffConsultationEvents(calendarStartDate, calendarEndDate, maybeReconcileDates);
+    getStaffScheduleEvents(calendarStartDate, calendarEndDate, maybeReconcileDates);
+    getEquipmentReservationEvents(calendarStartDate, calendarEndDate, maybeShowEvents);
+                       
+}
+
+function eventRendered(event, element){
+  console.log("event rendered");
+  console.log(staffChecklist);
+//  $(element).append("<span>"+event.calendarName+"<span>");
+  if(event.calendarName == staffScheduleCalendarName){
+    var badgeNames = Object.keys(meritBadgeIconList);
+    try{
+      var staffId = event.guestList[0].email.split("@")[0];
+      console.log(staffId);
+      // get merit badges this person has.
+      var staffData = staffChecklist.checklistData.data.filter(function(a){
+        return a.NetId == staffId;      
+      })[0];
+      var badgeNames = [];
+      var badgeScriptNames = [];
+      $.each(meritBadgeIconList, function(badgeName){
+        if(staffData[badgeName]){
+          badgeNames.push(badgeName);
+          badgeScriptNames.push("badge_"+badgeName.replace(/[^a-zA-Z]/g,""));
+        }
+      });
+      console.log(staffData);
+      console.log(badgeScriptNames);
+      $(element).append("<span class='merit-badge-list'>"+badgeNames.join(", ")+"</span>");
+      $(element).addClass(badgeScriptNames.join(" "));
+      $(element).addClass("badgedEvent");
+    }catch(e){
+      console.log("error in eventRendered loop: " + e);
+    }
+  }
+  if(event.calendarName == staffConsultationCalendarName){
+  
+  }
+  if(event.calendarName == equipmentReservationCalendarName){
+  
+  }
+  if(event.staffId){
+  }
+}
+
+
+
+
+// controls
+
+function maybeReconcileDates(){
+  console.log("maybe reconcile?");
+  if(staffScheduleEvents && staffConsultationEvents && staffChecklist){
+    filterStaffScheduleEventsbyBadges(maybeShowEvents);
+    reconcileStaffScheduleAndConsultations(maybeShowEvents);
+  }else{
+    console.log(staffScheduleEvents);
+    console.log(staffConsultationEvents);
+  }
+}
+
+function maybeShowEvents(){
+  console.log("maybe?");
+ if(staffScheduleEvents && 
+    equipmentReservationEvents &&
+    staffConsultationEvents && 
+    staffAvailabilityEvents && 
+    meritBadgeIconList &&
+    staffScheduleEventsFiltered &&
+    staffChecklist){
+      console.log("will show events");
+      renderEvents();
+  }else{
+    console.log(staffScheduleEvents);
+    console.log(equipmentReservationEvents);
+    console.log(staffConsultationEvents);
+    console.log(staffAvailabilityEvents);
+    console.log(meritBadgeIconList);
+    console.log(staffChecklist);
+  
+  }
+}
+
+
+
+
+// startup functions
+
+
+function setupCalendarView(){
+    console.log("setupCalendarView");
+    $('#calendar').fullCalendar({
+        // put your options and callbacks here
+        viewRender : calendarNewRender,
+        defaultView: defaultView,
+        scrollTime : "11:00",
+        eventRender : eventRendered,
+        timezone : timezone
+    });
+}
+
+
+$(function() {
+  moment().format();
+// see https://fullcalendar.io/docs/utilities/Moment/
+// see https://fullcalendar.io/docs/
+  google.script.run.withSuccessHandler(gotNetId).getNetId();
+  
+  /*
+  google.script.run
+  .withSuccessHandler(eventCreated)
+  .withFailureHandler(function(error){console.log(error);})
+  .createStaffConsultationEvent( 
+      "November 7, 2017, 18:00 ",  
+      "November 7, 2017, 20:00 ",
+      "new title", "This is the description", ['dhu3']);
+    */  
+//$('.collapse').collapse()     
+
+  getMeritBadgeIconList(showMeritBadgeList);
+  getEquipmentList(showEquipmentList);
+  getStaffChecklist(maybeShowEvents);
+
+  setupCalendarView();
+
+});
+
+
+
+
+// deprecate:
+
+function processStaffScheduleByMeritBadges(startDate, endDate){
+  console.log("asking for badge schedule");
+  var gotStaffSchedulesByMeritBadge = function(data){
+    staffMeritBadges = {};
+    scheduleWithDeets = {};
+    var allEvents = {};
+    console.log("got staff schedules w/ badges");
+    console.log(data);
+    
+    $.each(data, function(meritBadge, staffs){
+      $.each(staffs, function(staffId, deets){
+        if(!staffMeritBadges[staffId]){
+          staffMeritBadges[staffId] = {};
+        }
+        staffMeritBadges[staffId][meritBadge] = deets; 
+        $.each(deets.schedule, function(index, event){
+          scheduleWithDeets[event.id] = {event : event, deets: deets}; 
+          event.staffId = staffId;
+          allEvents[event.id] = event ;
+          console.log(event);
+        });
+        // add meritBadgeImage to event
+      });    
+    });  
+    
+    
+    console.log(allEvents);    
+    console.log(scheduleWithDeets);
+    console.log(staffMeritBadges);
+    showEvents(allEvents);
+  }
+  google.script.run
+    .withFailureHandler(function(error){console.log(error);})
+    .withSuccessHandler(gotStaffSchedulesByMeritBadge).organizeStaffByMeritBadges(startDate.toString(), endDate.toString());
+}
+
+
+
+
+
+    </script>
+  </body>
+</html>
+
+
