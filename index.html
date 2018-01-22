@@ -536,6 +536,49 @@ function equipmentClicked(event){
   /*
   Here let's have the UI that handles making an equipment reservation 
   */
+  $("#createEquipmentReservation").prop("disabled", true);
+  
+  var maybeEnableButton = function(){
+    console.log("maybe");
+    var startTouched = $('#equipmentReservationStartTime').data('touched');
+    var endTouched = $('#equipmentReservationEndTime').data('touched');
+    console.log(startTouched);
+    console.log(endTouched);
+    if(startTouched && endTouched){
+      var startdate = $('#equipmentReservationStartTime').datetimepicker('getValue');
+      var enddate = $('#equipmentReservationEndTime').datetimepicker('getValue');
+      if(startdate < enddate){
+        console.log("dates ok");
+        $("#createEquipmentReservation").prop("disabled", false);
+      }else{
+        console.log("dates in wrong order");
+      }
+    
+    }
+      
+  };
+  $("#equipmentReservationStartTime").change(function(){
+    $(this).data("touched", true);
+    maybeEnableButton()
+  });
+  $("#equipmentReservationEndTime").change(function(){
+    $(this).data("touched", true);
+    maybeEnableButton()
+  });
+  
+  
+  $("#createEquipmentReservation").click(function(){
+    console.log("creating reservation");
+    var startdate = $('#equipmentReservationStartTime').datetimepicker('getValue');
+    var enddate = $('#equipmentReservationEndTime').datetimepicker('getValue');
+
+    console.log(startdate);
+    console.log(enddate);
+    console.log(clientUser.netid);
+    console.log(selectedReservationEquipmentCategory);
+    console.log(selectedReservationEquipmentName);
+  });
+  
   $(".equipmentToReserveName").text(category + " : " + item_name);
   
 }
@@ -715,6 +758,7 @@ function setupDateTimePickers(){
   
   $("#equipmentReservationStartTime").datetimepicker({
     step: 15,
+    allowBlank: true,
     onSelectDate: function(seldate){
        maxMinTimeLogic(seldate, "start", this)
     },
@@ -733,6 +777,7 @@ function setupDateTimePickers(){
   });
   $("#equipmentReservationEndTime").datetimepicker({
     step: 15,
+    allowBlank: true,
     onSelectDate: function(seldate){
        maxMinTimeLogic(seldate, "end", this)
     },
@@ -740,8 +785,10 @@ function setupDateTimePickers(){
        console.log("onshow");
        maxMinTimeLogic(seldate, "end", this)
     },
+    validateOnBlur : false,
+    todayButton : true,
     format: 'm/d/y g:i A',
-    formatTime: 'g:i A'    
+    formatTime: 'g:i A'        
   });
  
 
