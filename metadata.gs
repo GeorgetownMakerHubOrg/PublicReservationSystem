@@ -20,30 +20,48 @@ var iHelpedSomeone = SpreadsheetApp
 
 // lists of things:
 
-var openHouse = {
+var openHours = {
   "Monday" : {
     open : "12:00",
+    openHour : 12,
     close : "17:00",
+    closeHour :  17,
+    index: 1
   },
   "Tuesday" : {
     open : "17:00",
+    openHour : 17,
     close : "20:00",
+    closeHour : 20,
+    index: 2
   },
   "Wednesday" : {
     open : "17:00",
+    openHour : 17,
     close : "20:00",
+    closeHour : 20,
+    index: 3
   },
   "Thursday" : {
     open : "17:00",
+    openHour : 17,
     close : "20:00",
+    closeHour : 20,
+    index: 4
   },
   "Friday" : {
     open : "12:00",
+    openHour : 12,
     close : "17:00",
+    closeHour :  17,
+    index: 5
   },
   "Saturday" : {
     open : "12:00",
+    openHour : 12,
     close : "17:00",
+    closeHour :  17,
+    index: 6
   }
 };
 

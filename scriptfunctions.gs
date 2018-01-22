@@ -52,3 +52,24 @@ function getNetId() {
   }
   return user;
 }
+
+
+// get information about the user (volunteer/staff/visitor, authorizations, etc)
+function getUserTableDataFromNetId(netId){
+  var userTableData = userTable
+  .getActiveSheet()
+  .getDataRange()
+  .getValues();
+
+  var userData = dataIntoHashRows(userTableData, 0, 1, function(row){
+    if(row["netid"].toString().trim() == netId.toString().trim()){
+      return true;
+    }
+    return false;
+  }); //, function(row){ return row['NetId'] == netId;}).data;
+  
+  if(userData.data.length > 0){
+    return userData.data[0];
+  }
+  return false;
+}

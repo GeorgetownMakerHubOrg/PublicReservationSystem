@@ -17,6 +17,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.6.2/fullcalendar.min.js"
     crossorigin="anonymous"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.6.2/fullcalendar.min.css" rel="stylesheet">
+  <link href="https://cdn.rawgit.com/xdan/datetimepicker/74389996/build/jquery.datetimepicker.min.css" rel="stylesheet">
   
   
   <!-- Latest compiled and minified CSS -->
@@ -30,14 +31,27 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullPage.js/2.9.5/jquery.fullpage.min.js"></script>
     <script src="https://cdn.rawgit.com/thanashyam/2309671/raw/5168575d69cd84588c52aa183dbfb3d932b9d4f9/jquery.md5.js"></script>
+    <script src="https://cdn.rawgit.com/xdan/datetimepicker/74389996/build/jquery.datetimepicker.full.min.js"></script>
 
   </head>
   <body>
     <div class="container">
       <div class="row">
-        <div class="username">
-    
+        <div class="currentUserDisplay"><b>Logged in user</b>
+          <span class="currentUserNetid">Anonymous</span> : 
+          <span class="currentUserName">Unknown User</span>
+<!--          <span class="currentUserAccessLevel">Open Hours Only</span> -->
         </div>
+        <div class="clientEnter"><b>Serving User:</b>
+          <input size="10" id="clientNetIdEnter" name="clientNetId" placeholder="Net ID"/>
+          <button class="clientLookup">Lookup</button>
+          <img src="https://loading.io/spinners/gears/lg.dual-gear-loading-icon.gif" width="32" class="clientLoadingGif" style="display:none;">
+        </div>
+        <div class="clientDisplay"><b>Serving:</b>       
+          <span class="clientNetid">Anonymous</span> : 
+          <span class="clientUserName">Unknown User</span> : Access
+          <span class="clientUserAccessLevel">Unknown</span>
+        </div>        
       </div>
       <div class="row">
         <div class="col-md-4">
@@ -62,13 +76,21 @@
     <div class="card-header" role="tab" id="headingReservationUI_e">
       <h5 class="mb-0">
         <a class="collapsed" data-toggle="collapse" href="#collapseReservationUI_e" aria-expanded="false" aria-controls="collapseReservationUI_e">
-<!--        Reservation UI-->
+<!--        Reservation UI-->           
         </a>
       </h5>
     </div>
     <div id="collapseReservationUI_e" class="collapse" role="tabpanel" aria-labelledby="headingReservationUI_s">
       <div class="card-body">
-      UI Here
+      <B>Reservation for:</b> <span class="equipmentToReserveName"></span><BR/>
+      <span class="ifAccessClosedHours notes">Because you have keycode access to the Maker Hub, you can reserve equipment for any time the library is open.</span>
+      <span class="ifNotAccessClosedHours notes">As a visitor, you can reserve equipment for hours the Maker Hub is open. Reservations for 3D Printers must START during open hours.</span>
+      <BR>
+      <b>From:</b> <input id="equipmentReservationStartTime" type="text">
+      <BR>
+      <b>To:</b> <input id="equipmentReservationEndTime" type="text">
+      <br>
+      <button id="createEquipmentReservation">Create Reservation</button>
       </div>
     </div>
   </div>   
@@ -131,7 +153,8 @@ var calendarEndDate = false;
 var selectedBadgeName = false;
 var selectedBadgeScriptName = false;
 var staffScheduleEventsFiltered = false;
-
+var selectedReservationEquipmentName = false;
+var selectedReservationEquipmentCategory = false;
 
 var staffScheduleCalendarName = "Maker Hub Staff and Volunteer Schedule";
 var staffScheduleEvents = false;
@@ -144,23 +167,78 @@ var staffAvailabilityEvents = false;
 var meritBadgeIconList = false;
 var staffChecklist = false;
 var equipmentList = false;
+var openHours = false;
 
-var user = {
-  meritBadges : [],
-  isStaff : false     
+var currentUser = {
+  isStaff : false,
+  accessClosedHours : false
 }
 
+var clientUser = {
+  isStaff : false,
+  accessClosedHours : false
+}
 
-function gotNetId(username){
-  $(".content").text(username);
+var defaultClientUser = clientUser;
+
+
+function gotCurrentUserNetId(netId){
+  $(".currentUserNetid").text(netId);
+  currentUser.netid = netId;
+  google.script.run.withSuccessHandler(function(data){
+    currentUser = data;
+    console.log("got user data");
+    console.log(currentUser);
+    if(currentUser.role && currentUser.role.trim() != "" && currentUser.role.toLowerCase() != "visitor"){
+      if(currentUser.role.toLowerCase() == "staff" || 
+      currentUser.role.toLowerCase() == "volunteer" || 
+      currentUser.role.toLowerCase() == "manager"){
+        currentUser.isStaff = true;
+      }
+      currentUser.accessClosedHours = true;
+    }
+    $(".currentUserName").text(currentUser.name);
+    $(".currentUserAccessLevel").text(currentUser.accessClosedHours ? "All Hours" :  "Open Hours Only");
+  }).getUserTableDataFromNetId(netId);
 }
 
 function eventCreated(event){
-console.log("event created");
-console.log(event);
+  console.log(event);
   $(".event").text(JSON.stringify(event, null, '  '));
 }
 
+
+function clientLookupClicked(){
+  $(".clientLoadingGif").show();
+  clientNetId = $("#clientNetIdEnter").val();
+  console.log("clicked" + clientNetId);
+  clientUser = defaultClientUser;
+  google.script.run.withSuccessHandler(function(data){
+    clientUser = data;
+    console.log("got user data");
+    console.log(clientUser);
+    if(clientUser.role && clientUser.role.trim() != "" && clientUser.role.toLowerCase() != "visitor"){
+      if(clientUser.role.toLowerCase() == "staff" || 
+      clientUser.role.toLowerCase() == "volunteer" || 
+      clientUser.role.toLowerCase() == "manager"){
+        clientUser.isStaff = true;
+      }
+      clientUser.accessClosedHours = true;
+    }
+    $(".clientUserName").text(clientUser.name ? clientUser.name : "Unknown");
+    $(".clientNetid").text(clientUser.netid ? clientUser.netid :  "Anonymous");
+    $(".clientUserAccessLevel").text(clientUser.accessClosedHours ? "All Hours" :  "Open Hours Only");
+    $(".clientLoadingGif").hide();
+    if(clientUser.accessClosedHours){
+      $(".ifAccessClosedHours").show();
+      $(".ifNotAccessClosedHours").hide();
+    }else{
+      $(".ifAccessClosedHours").hide();
+      $(".ifNotAccessClosedHours").show(); 
+    }
+
+  }).getUserTableDataFromNetId(clientNetId);
+}
 
 // Get Data
 
@@ -222,6 +300,15 @@ function getStaffChecklist(callback){
     staffChecklist = data;
     if(callback){callback();}
   }).getStaffChecklist(); 
+}
+
+function getOpenHours(callback){
+  google.script.run
+  .withFailureHandler(function(error){console.log(error);})
+  .withSuccessHandler(function(data){
+    openHours = data;
+    if(callback){callback();}
+  }).getOpenHours(); 
 }
 
 function getEquipmentList(callback){
@@ -438,18 +525,19 @@ function equipmentClicked(event){
   console.log(event);
   var item_name = $(event.target).data("item");
   var category = $(event.target).parent().parent().data("category");
+  
+  selectedReservationEquipmentName = item_name;
+  selectedReservationEquipmentCategory = category;
   console.log(category + " : " + item_name);
   
   $("#collapseOne").collapse("hide");
   $("#collapseReservationUI_e").collapse("show");  
   
   /*
-  Here let's have the UI that handles making a reservation
-  
-  
-  
-  
+  Here let's have the UI that handles making an equipment reservation 
   */
+  $(".equipmentToReserveName").text(category + " : " + item_name);
+  
 }
 
 function calendarNewRender(view, element){
@@ -469,6 +557,8 @@ function calendarNewRender(view, element){
     
     calendarStartDate = $('#calendar').fullCalendar('getDate');   
     calendarEndDate = $('#calendar').fullCalendar('getDate');   
+    // adjust the reservation date window here as well, somehow...
+    
     
     console.log("curDate is " + calendarStartDate.format());
     calendarEndDate.endOf("day");
@@ -585,12 +675,98 @@ function setupCalendarView(){
 }
 
 
+function setupDateTimePickers(){
+ 
+  var maxMinTimeLogic = function(seldate, context, _this){
+    var minTime = new Date();
+    minTime.setMinutes(0);
+    var maxTime = new Date();
+    maxTime.setMinutes(0);
+    var setMin = 0;
+    var setMax = 0;
+    console.log(clientUser);
+    if(clientUser.accessClosedHours || 
+      (context == "end" && selectedReservationEquipmentCategory && selectedReservationEquipmentCategory.match(/3D Printer/))){
+      console.log("open access");
+      setMin = minTime.setHours(0);
+      maxTime.setMinutes(59);
+      setMax = maxTime.setHours(23);
+    }else{
+      // get this days open hours:
+      var thisDate = new Date(seldate);
+      var dow = thisDate.getDay();
+      if(dow != 0){
+        console.log(openHours);
+        var keys = Object.keys(openHours);
+        var todayHoursIndex = keys.filter(function(day){
+          if(openHours[day].index == dow){
+            return true;
+          }
+        })[0];
+        var todayHours = openHours[todayHoursIndex];
+        setMin = minTime.setHours(todayHours.openHour);
+        maxTime.setMinutes(01)
+        setMax = maxTime.setHours(todayHours.closeHour);
+      }
+    }
+    console.log(seldate);
+    _this.setOptions({minTime:setMin, maxTime:setMax});        
+  };
+  
+  $("#equipmentReservationStartTime").datetimepicker({
+    step: 15,
+    onSelectDate: function(seldate){
+       maxMinTimeLogic(seldate, "start", this)
+    },
+    onShow:  function(seldate){
+       console.log("onshow");
+       maxMinTimeLogic(seldate, "start", this)
+    },
+    onClose: function(seldate){
+      console.log("close");
+      console.log(seldate);
+    },
+    validateOnBlur : false,
+    todayButton : true,
+    format: 'm/d/y g:i A',
+    formatTime: 'g:i A'        
+  });
+  $("#equipmentReservationEndTime").datetimepicker({
+    step: 15,
+    onSelectDate: function(seldate){
+       maxMinTimeLogic(seldate, "end", this)
+    },
+    onShow:  function(seldate){
+       console.log("onshow");
+       maxMinTimeLogic(seldate, "end", this)
+    },
+    format: 'm/d/y g:i A',
+    formatTime: 'g:i A'    
+  });
+ 
+
+}
+
 $(function() {
   moment().format();
 // see https://fullcalendar.io/docs/utilities/Moment/
 // see https://fullcalendar.io/docs/
-  google.script.run.withSuccessHandler(gotNetId).getNetId();
+  google.script.run.withSuccessHandler(gotCurrentUserNetId).getNetId();
   
+  
+  $(".clientLookup").click(clientLookupClicked);
+  $('#clientNetIdEnter').keydown(function (e){
+    if(e.keyCode == 13){
+        clientLookupClicked();
+    }
+  });
+  if(clientUser.accessClosedHours){
+    $(".ifAccessClosedHours").show();
+    $(".ifNotAccessClosedHours").hide();
+  }else{
+    $(".ifAccessClosedHours").hide();
+    $(".ifNotAccessClosedHours").show(); 
+  }  
   /*
   google.script.run
   .withSuccessHandler(eventCreated)
@@ -602,10 +778,12 @@ $(function() {
     */  
 //$('.collapse').collapse()     
 
+  getOpenHours();
+  setupDateTimePickers();
   getMeritBadgeIconList(showMeritBadgeList);
   getEquipmentList(showEquipmentList);
   getStaffChecklist(maybeShowEvents);
-
+  
   setupCalendarView();
 
 });
@@ -639,7 +817,6 @@ function processStaffScheduleByMeritBadges(startDate, endDate){
         // add meritBadgeImage to event
       });    
     });  
-    
     
     console.log(allEvents);    
     console.log(scheduleWithDeets);
